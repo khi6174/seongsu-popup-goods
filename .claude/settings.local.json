@@ -34,7 +34,10 @@
       "Bash(rm -rf prisma/migrations)",
       "Bash(rm -f prisma/dev.db prisma/dev.db-journal)",
       "Bash(npx prisma *)",
-      "PowerShell(Get-Process *)"
+      "PowerShell(Get-Process *)",
+      "Bash(npm uninstall *)",
+      "Bash(npm pkg *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\); console.log\\('better-sqlite3 dep:', p.dependencies['@prisma/adapter-better-sqlite3'] ?? 'removed ✓'\\)\")"
     ]
   }
 }
