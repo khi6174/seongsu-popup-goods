@@ -46,7 +46,10 @@
       "PowerShell($c = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { $c.OwningProcess | Sort-Object -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop; Write-Output \"killed PID $_ on :3000\" } catch { Write-Output \"cant kill $_\" } } } else { Write-Output \"nothing on :3000\" })",
       "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"locale\":\"ko\",\"messages\":[{\"role\":\"user\",\"content\":\"10달러 이하 키링 있어? 해외배송 돼?\"}]}')",
       "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"locale\":\"en\",\"messages\":[{\"role\":\"user\",\"content\":\"Any cheese cat goods?\"},{\"role\":\"assistant\",\"content\":\"Yes! We have Cheese Cat items.\"},{\"role\":\"user\",\"content\":\"Which ones are in stock under $10?\"}]}')",
-      "Bash(curl -s -X POST http://localhost:3000/api/translate -H \"Content-Type: application/json\" -d '{\"text\":\"가볍고 귀여운 아크릴 키링이에요.\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/translate -H \"Content-Type: application/json\" -d '{\"text\":\"가볍고 귀여운 아크릴 키링이에요.\"}')",
+      "WebFetch(domain:docs.tosspayments.com)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('toss:', p.dependencies['@tosspayments/tosspayments-sdk']\\)\")",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { $c.OwningProcess | Sort-Object -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop; Write-Output \"killed $_\" } catch {} } } else { Write-Output \"none\" })"
     ]
   }
 }

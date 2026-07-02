@@ -63,7 +63,9 @@ model Order {
   subtotalKrw    Int
   shippingFeeKrw Int
   totalKrw       Int
-  status         String      @default("CREATED") // MVP: CREATED(모의결제 완료)
+  status         String      @default("PENDING") // PENDING(결제대기) → PAID(승인완료) | FAILED
+  paymentKey     String? // 토스페이먼츠 결제 승인 키(승인 성공 시 저장)
+  paidAt         DateTime? // 결제 승인 시각
   items          OrderItem[]
   createdAt      DateTime    @default(now())
 }

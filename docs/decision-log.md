@@ -262,3 +262,23 @@
   영어 멀티턴, 번역 모두 정상 응답. (번역에 경미한 환각 관찰 — 부차 기능이라 보류)
 - **영향(Consequences)**: 로컬 챗봇 동작 확인. **배포측 조치 필요**: Vercel 환경변수에
   `GEMINI_API_KEY` 추가(+ 기존 `ANTHROPIC_API_KEY` 제거)해야 프로덕션 챗봇이 실동작.
+
+## [0017] 실결제 연동: 토스페이먼츠(결제창, 테스트 모드)  (2026-07-02)
+- **상황(Context)**: 모의결제를 실제 PG(토스페이먼츠)로 대체 요청. 라이브(실제 청구)는
+  사업자 심사 필요 → 지금은 **테스트 모드**로 "실제 결제창+승인" 완성(실 청구 없음).
+- **결정(Decision)** (사장님이 세부 질문 프롬프트를 중단·재요청 → 기본값으로 바로 구현. [[build-requests-proceed-with-defaults]]):
+  - 방식 = **결제창(리다이렉트)**, SDK = `@tosspayments/tosspayments-sdk`(v2). 모델 UI 커스텀 최소·안정.
+  - **플로우**: 체크아웃 →(POST /api/orders: 서버가 금액 확정, **PENDING** 주문 생성, 금액·주문명 반환)
+    → `payment.requestPayment(CARD, amount{KRW}, orderId=주문번호, success/failUrl)` 결제창
+    → successUrl(/payments/success) → **POST /api/payments/confirm**(토스 승인 API 호출) → PAID.
+  - **보안**: 승인 시 금액을 **DB 주문금액과 대조**(위변조 방지), 시크릿키는 서버 전용,
+    클라이언트키만 `NEXT_PUBLIC_`. 승인 성공 시 **재고 차감 + PAID 를 한 트랜잭션**(경합 방지 updateMany 조건부).
+  - 스키마: Order에 `status`(PENDING/PAID/FAILED)·`paymentKey`·`paidAt` 추가(db push).
+  - 키 없을 때: 체크아웃은 "결제 미설정" 안내, confirm은 503 → 흐름 안 깨짐.
+- **근거(Why)**: 결제창이 대시보드 위젯설정 없이 테스트키만으로 즉시 동작. 서버 금액확정·대조는
+  결제 위변조 방지의 기본. 재고는 승인 성공 시점에 차감이 정확.
+- **검증(Verify)**: build 통과. /api/orders → PENDING+금액(25,000 계산 정확)+주문명 반환 확인,
+  /api/payments/confirm 키없음 503 확인. **실제 결제창+카드승인은 테스트키 입력 후 브라우저 검증 필요**.
+- **영향(Consequences)**: 로컬/배포에 **테스트 키 입력 필요**: `.env` 및 Vercel 환경변수에
+  `NEXT_PUBLIC_TOSS_CLIENT_KEY`·`TOSS_SECRET_KEY`. 라이브 전환 = 사업자 심사 후 키 교체.
+  운영 시 재고반영 실패분 결제취소(cancel) 연동은 향후 과제.

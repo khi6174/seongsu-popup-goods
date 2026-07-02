@@ -100,10 +100,22 @@ export async function POST(req: Request) {
       subtotalKrw,
       shippingFeeKrw,
       totalKrw,
-      status: "CREATED", // 모의결제 완료 상태
+      status: "PENDING", // 결제 대기 — 토스 승인 성공 시 PAID 로 전환
       items: { create: orderItemsData },
     },
   });
 
-  return NextResponse.json({ orderNumber: order.orderNumber });
+  // 토스 결제창에 표시할 주문명 (예: "치즈냥 스티커 팩 외 2건")
+  const totalQty = orderItemsData.reduce((n, i) => n + i.quantity, 0);
+  const orderName =
+    orderItemsData.length === 1 && orderItemsData[0].quantity === 1
+      ? orderItemsData[0].productNameSnapshot
+      : `${orderItemsData[0].productNameSnapshot} 외 ${totalQty - 1}건`;
+
+  // 클라이언트는 이 금액/주문명으로 토스 결제창을 연다. (금액은 서버가 확정한 값)
+  return NextResponse.json({
+    orderNumber: order.orderNumber,
+    amount: order.totalKrw,
+    orderName,
+  });
 }

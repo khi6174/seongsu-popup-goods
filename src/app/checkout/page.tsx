@@ -1,18 +1,20 @@
 "use client";
 
-// S5 체크아웃 — 비회원 주문 + 모의결제. 배송비는 국가 → 권역으로 미리보기.
+// S5 체크아웃 — 비회원 주문 + 토스페이먼츠 실결제(테스트). 배송비는 국가 → 권역으로 미리보기.
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
 import { useCart } from "@/lib/cart";
 import { useI18n } from "@/components/I18nProvider";
 import { Price } from "@/components/Price";
 import { TrustBadges } from "@/components/TrustBadges";
 import { regionForCountry, SHIPPING_FEES_KRW } from "@/lib/config";
 
+// 공개 클라이언트 키(브라우저 노출 OK). 없으면 결제 버튼이 안내 메시지를 띄운다.
+const TOSS_CLIENT_KEY = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
+
 export default function CheckoutPage() {
-  const { items, subtotalKrw, clear } = useCart();
+  const { items, subtotalKrw } = useCart();
   const { t } = useI18n();
-  const router = useRouter();
 
   const [form, setForm] = useState({
     name: "",
@@ -37,9 +39,14 @@ export default function CheckoutPage() {
       setError(t("checkout.required"));
       return;
     }
+    if (!TOSS_CLIENT_KEY) {
+      setError(t("checkout.notConfigured"));
+      return;
+    }
     setError("");
     setSubmitting(true);
     try {
+      // 1) 서버에 주문 준비(PENDING) → 서버가 확정한 금액·주문명 수령(금액 위변조 방지)
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,11 +65,25 @@ export default function CheckoutPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "order failed");
       }
-      const data = await res.json();
-      clear();
-      router.push(`/order/${data.orderNumber}`);
+      const { orderNumber, amount, orderName } = await res.json();
+
+      // 2) 토스 결제창 열기. 성공하면 토스가 successUrl 로 리다이렉트한다.
+      const toss = await loadTossPayments(TOSS_CLIENT_KEY);
+      const payment = toss.payment({ customerKey: ANONYMOUS });
+      await payment.requestPayment({
+        method: "CARD",
+        amount: { currency: "KRW", value: amount },
+        orderId: orderNumber,
+        orderName,
+        successUrl: `${window.location.origin}/payments/success`,
+        failUrl: `${window.location.origin}/payments/fail`,
+        customerEmail: form.email,
+        customerName: form.name,
+      });
+      // 여기 아래는 리다이렉트로 실행되지 않음(장바구니 비우기는 성공 페이지에서 처리).
     } catch (e) {
-      setError(e instanceof Error ? e.message : "order failed");
+      // 사용자가 결제창을 닫거나(USER_CANCEL) 오류가 나면 여기로 온다.
+      setError(e instanceof Error ? e.message : "결제를 진행할 수 없어요.");
       setSubmitting(false);
     }
   }
