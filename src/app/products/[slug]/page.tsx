@@ -5,7 +5,7 @@ import { getProductBySlug } from "@/lib/queries";
 import { getLocale } from "@/lib/locale-server";
 import { pick, translate } from "@/lib/i18n";
 import { CATEGORY_LABELS, type Category } from "@/lib/config";
-import { emojiFor, gradientFor } from "@/lib/product-image";
+import { emojiFor, gradientFor, imageFor } from "@/lib/product-image";
 import { Price } from "@/components/Price";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { RestockButton } from "@/components/RestockButton";
@@ -29,6 +29,7 @@ export default async function ProductDetailPage({
   const catLabel =
     CATEGORY_LABELS[product.category as Category]?.[locale] ?? product.category;
   const soldOut = product.stock <= 0;
+  const img = imageFor(product.slug);
 
   return (
     <div>
@@ -40,14 +41,25 @@ export default async function ProductDetailPage({
       </Link>
 
       <div className="mt-3 grid gap-8 md:grid-cols-2">
-        {/* 이미지 플레이스홀더 */}
-        <div
-          className={`flex h-72 items-center justify-center rounded-lg bg-gradient-to-br text-7xl ${gradientFor(
-            product.category
-          )}`}
-        >
-          {emojiFor(product.category)}
-        </div>
+        {/* 상품 사진 (없으면 이모지 플레이스홀더) */}
+        {img ? (
+          <div className="h-72 overflow-hidden rounded-lg border border-line bg-white shadow-card md:h-80">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={img}
+              alt={name}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div
+            className={`flex h-72 items-center justify-center rounded-lg bg-gradient-to-br text-7xl md:h-80 ${gradientFor(
+              product.category
+            )}`}
+          >
+            {emojiFor(product.category)}
+          </div>
+        )}
 
         {/* 정보 */}
         <div className="flex flex-col">
@@ -90,7 +102,7 @@ export default async function ProductDetailPage({
                   nameKo: product.nameKo,
                   nameEn: product.nameEn,
                   priceKrw: product.priceKrw,
-                  image: emojiFor(product.category),
+                  image: img ?? emojiFor(product.category),
                 }}
               />
             )}

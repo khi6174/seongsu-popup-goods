@@ -10,6 +10,7 @@ import {
   STATUS_BADGE_CLASS,
 } from "@/lib/popup-status";
 import { ProductCard } from "@/components/ProductCard";
+import { posterFor } from "@/lib/product-image";
 
 export default async function PopupDetailPage({
   params,
@@ -28,12 +29,24 @@ export default async function PopupDetailPage({
   const name = pick(locale, popup.nameKo, popup.nameEn);
   const desc = pick(locale, popup.descriptionKo, popup.descriptionEn);
   const period = `${popup.startDate.toLocaleDateString()} ~ ${popup.endDate.toLocaleDateString()}`;
+  const poster = posterFor(popup.slug);
 
   return (
     <div>
       <Link href="/" className="text-sm text-concrete hover:text-ink">
         ← {translate(locale, "nav.home")}
       </Link>
+
+      {poster && (
+        <div className="mt-3 overflow-hidden rounded-lg border border-line shadow-card">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={poster}
+            alt={name}
+            className="h-56 w-full object-cover sm:h-72"
+          />
+        </div>
+      )}
 
       <section className="mt-3 rounded-lg bg-gradient-to-br from-peach via-lavender to-sky p-6 sm:p-8">
         <div className="flex items-center gap-2">

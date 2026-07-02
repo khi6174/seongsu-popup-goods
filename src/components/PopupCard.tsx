@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { pick, translate, type Locale } from "@/lib/i18n";
 import { getPopupStatus, STATUS_LABELS } from "@/lib/popup-status";
+import { posterFor } from "@/lib/product-image";
 
 type PopupCardData = {
   slug: string;
@@ -37,16 +38,29 @@ export function PopupCard({
   const status = getPopupStatus(popup.startDate, popup.endDate);
   const name = pick(locale, popup.nameKo, popup.nameEn);
   const desc = pick(locale, popup.descriptionKo, popup.descriptionEn);
+  const poster = posterFor(popup.slug);
 
   return (
     <Link
       href={`/popups/${popup.slug}`}
       className="group block overflow-hidden rounded-lg border border-line bg-white shadow-card transition duration-150 hover:-translate-y-1 hover:shadow-float"
     >
-      <div
-        className={`flex h-32 items-center justify-center text-5xl ${BG[index % BG.length]}`}
-      >
-        🎪
+      <div className="relative h-40 overflow-hidden">
+        {poster ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={poster}
+            alt={name}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div
+            className={`flex h-full items-center justify-center text-5xl ${BG[index % BG.length]}`}
+          >
+            🎪
+          </div>
+        )}
       </div>
       <div className="p-4">
         <div className="mb-2 flex items-center gap-2">

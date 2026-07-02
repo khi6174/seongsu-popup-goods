@@ -38,8 +38,17 @@ export default function CartPage() {
             key={i.productId}
             className="flex items-center gap-4 rounded-lg border border-line bg-white p-4 shadow-card"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-md bg-lavender/50 text-2xl">
-              {i.image}
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-md bg-lavender/50 text-2xl">
+              {i.image.startsWith("/") ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={i.image}
+                  alt={pick(locale, i.nameKo, i.nameEn)}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                i.image
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate font-display font-bold text-ink">

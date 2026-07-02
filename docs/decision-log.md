@@ -204,3 +204,23 @@
 - **영향(Consequences)**: 배포·DB 마이그레이션 도구 준비 완료. 아직 **DB를 Supabase(Postgres)로
   전환한 것은 아님** — 현재는 여전히 SQLite. 다음 후보 = GitHub 레포 생성(gh) → Vercel 연결 →
   (필요 시) Prisma 데이터소스를 Supabase Postgres로 전환.
+
+## [0014] 굿즈 실물 사진 연결 (이모지 플레이스홀더 → 사진)  (2026-07-02)
+- **상황(Context)**: 사장님이 굿즈 7종 사진(.jfif)을 `docs/images/`에 제공. 각 상품 페이지에
+  실물 사진으로 출력 요청.
+- **결정(Decision)**:
+  - `.jfif`는 실제 JPEG(매직바이트 확인)라 **`public/products/<slug>.jpg`** 로 복사(파일명=상품 슬러그).
+  - `lib/product-image.ts`에 **슬러그→사진경로 맵 `PRODUCT_IMAGE` + `imageFor(slug)`** 헬퍼 추가.
+    기존 `emojiFor(category)` 코드-맵 패턴과 동일 결. 사진 없으면 **이모지+파스텔 그라데이션으로 폴백**.
+  - 적용 위치: `ProductCard`(목록·팝업상세·shop, hover 살짝 줌), 상품상세 대형 이미지,
+    장바구니 썸네일(경로면 `<img>`, 이모지면 그대로). 품절 카드는 사진 살짝 흐리게.
+- **근거(Why)**: DB `imageUrls` 재시드 없이 즉시·결정적으로 매핑되고, 이 코드베이스가 이미 쓰는
+  카테고리 코드-맵 방식과 일관. `<img>` 사용(next/image 설정 불필요, MVP 적합).
+- **영향(Consequences)**: 전 굿즈가 실물 사진으로 노출. 향후 상품 수가 늘면 DB `imageUrls`
+  기반으로 승격 가능. 원본 `docs/images/*.jfif`는 소스로 보관.
+
+### [0014-a] 팝업 포스터 사진도 동일 방식으로 추가  (2026-07-02)
+- 팝업 3종 포스터(`docs/images/*popup poster.jfif`, JPEG) → `public/popups/<slug>.jpg` 복사.
+- `product-image.ts`에 `POPUP_POSTER` 맵 + `posterFor(slug)` 추가([0014]의 `imageFor`와 동일 결).
+- 적용: 홈 `PopupCard`(포스터 커버, hover 줌) · 팝업상세 상단 포스터 배너. 없으면 🎪 이모지 폴백.
+- 주의: `mint-bear.jpg`는 원본이 5KB로 저해상(원본 파일 자체가 작음).
