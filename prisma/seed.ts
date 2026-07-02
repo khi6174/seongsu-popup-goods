@@ -2,10 +2,11 @@
 // 날짜는 '지금' 기준 상대값으로 만들어 상태(열림/마감임박)가 자연스럽게 나오게 한다.
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
+// 시드는 일회성 스크립트라 세션 풀러(DIRECT_URL, 5432)로 접속.
+const adapter = new PrismaPg({
+  connectionString: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
 });
 const prisma = new PrismaClient({ adapter });
 

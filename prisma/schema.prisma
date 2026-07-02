@@ -1,16 +1,18 @@
 // 성수동 팝업 굿즈 글로벌 쇼핑몰 — 데이터 스키마
 // 설계 근거: docs/planning/03-data-model.md
-// 참고: SQLite에는 enum/배열 타입이 없어 category·status는 String,
-//       이미지 목록(imageUrls)은 JSON 문자열로 저장한다.
+// DB: Supabase(PostgreSQL). category·status는 String 유지(코드 상수로 관리),
+//     이미지 목록(imageUrls)은 JSON 문자열로 저장(기존 코드 호환).
+// 접속: DATABASE_URL=트랜잭션 풀러(앱 런타임), DIRECT_URL=세션 풀러(마이그레이션).
 
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
+// Prisma 7: 접속 URL은 prisma.config.ts 의 datasource.url(마이그레이션용)에 둔다.
+// 앱 런타임 접속은 드라이버 어댑터(src/lib/db.ts 의 PrismaPg)가 담당.
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 /// 성수동에서 열리는 팝업 하나. (status는 저장하지 않고 날짜로 계산 — 03 설계 원칙)

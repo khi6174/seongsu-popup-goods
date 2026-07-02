@@ -9,4 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
     seed: "tsx prisma/seed.ts",
   },
+  // 마이그레이션/introspection CLI 접속 = 세션 풀러(DIRECT_URL, 5432).
+  // 앱 런타임 접속은 드라이버 어댑터(src/lib/db.ts)가 DATABASE_URL 로 별도 처리.
+  datasource: {
+    url: process.env.DIRECT_URL,
+  },
 });

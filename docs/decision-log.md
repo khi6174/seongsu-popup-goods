@@ -224,3 +224,22 @@
 - `product-image.ts`에 `POPUP_POSTER` 맵 + `posterFor(slug)` 추가([0014]의 `imageFor`와 동일 결).
 - 적용: 홈 `PopupCard`(포스터 커버, hover 줌) · 팝업상세 상단 포스터 배너. 없으면 🎪 이모지 폴백.
 - 주의: `mint-bear.jpg`는 원본이 5KB로 저해상(원본 파일 자체가 작음).
+
+## [0015] DB 전환: SQLite → Supabase(PostgreSQL)  (2026-07-02)
+- **상황(Context)**: Vercel 서버리스 배포 전, 파일 기반 SQLite는 서버리스에서 못 쓰므로
+  클라우드 Postgres로 이전 필요. 배포 순서 1(커밋)→2(DB전환)→3(배포) 중 2단계.
+- **결정(Decision)**:
+  - Supabase 프로젝트를 **대시보드에서 생성**, 리전 **Seoul(ap-northeast-2)**. (계정·비밀번호는
+    사장님이 직접 — 비밀번호는 특수문자 이슈로 영문+숫자로 재설정 후 `.env`에 로컬 입력)
+  - Prisma 데이터소스 `sqlite`→`postgresql`. **Prisma 7.8부터 접속 URL은 스키마가 아니라
+    `prisma.config.ts`의 `datasource.url`**에 둠 → 마이그레이션용 = `DIRECT_URL`(세션 풀러 5432).
+  - 런타임 접속은 드라이버 어댑터 **`@prisma/adapter-pg`(PrismaPg)** + `DATABASE_URL`
+    (**트랜잭션 풀러 6543, `pgbouncer=true`** — 서버리스 적합). `better-sqlite3` 어댑터 제거.
+  - 스키마 히스토리 대신 **`prisma db push`**로 테이블 생성(Supabase 풀러에서 shadow DB 이슈 회피,
+    MVP엔 충분). seed는 `DIRECT_URL`로 접속.
+- **근거(Why)**: 서버리스=트랜잭션 풀러, 마이그레이션=세션 풀러가 Supabase+Prisma 표준. 드라이버
+  어댑터는 Prisma 7 필수. db push는 초심자·프로토타이핑에 단순하고 shadow DB 권한 문제 없음.
+- **검증(Verify)**: db push·seed 성공(팝업3·굿즈7). 앱 런타임에서 홈/‧shop이 Supabase 데이터
+  렌더(읽기 OK), 주문 생성 API 200·SS-20260702-0001(쓰기·트랜잭션 OK, 풀러 경유). `npm run build` 통과.
+- **영향(Consequences)**: 로컬·배포 모두 Supabase Postgres 사용. `.env`는 커밋 안 됨(비밀번호 로컬).
+  다음 = 3단계 **Vercel 배포**: 레포 연결 + 환경변수(DATABASE_URL·DIRECT_URL·ANTHROPIC_API_KEY) 등록.
