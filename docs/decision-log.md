@@ -243,3 +243,22 @@
   렌더(읽기 OK), 주문 생성 API 200·SS-20260702-0001(쓰기·트랜잭션 OK, 풀러 경유). `npm run build` 통과.
 - **영향(Consequences)**: 로컬·배포 모두 Supabase Postgres 사용. `.env`는 커밋 안 됨(비밀번호 로컬).
   다음 = 3단계 **Vercel 배포**: 레포 연결 + 환경변수(DATABASE_URL·DIRECT_URL·ANTHROPIC_API_KEY) 등록.
+
+## [0016] AI 제공자 전환: Anthropic Claude → Google Gemini  (2026-07-02)
+- **상황(Context)**: 사장님이 챗봇을 Gemini로 변경 결정. `.env`의 키를 `GEMINI_API_KEY`로 교체
+  (기존 ANTHROPIC 키 제거). 코드는 여전히 Anthropic이라 전환 필요.
+- **결정(Decision)**:
+  - SDK: `@anthropic-ai/sdk` 제거 → **`@google/genai`(v2.10.0)** 설치.
+  - 호출: 신 Interactions API 대신 **`ai.models.generateContent`** 사용(멀티턴 매핑이 단순·안정).
+    대화 기록은 `contents:[{role:'user'|'model', parts:[{text}]}]`로 변환(assistant→model),
+    시스템 프롬프트는 `config.systemInstruction`, 상한은 `maxOutputTokens`.
+  - 모델: 챗봇·번역 모두 **`gemini-2.5-flash`**.
+  - **`thinkingConfig.thinkingBudget = 0`**: 2.5-flash는 사고 토큰이 출력 상한을 잠식해
+    낮은 maxOutputTokens에서 **빈 응답**이 날 수 있어 사고 비활성(간단 안내엔 불필요·더 빠름).
+  - 키 없을 때 폴백 문구를 GEMINI_API_KEY 안내로 수정.
+- **근거(Why)**: 제공자만 바뀌었을 뿐 아키텍처(카탈로그 컨텍스트 주입, 다국어, 폴백)는 유지.
+  generateContent는 무상태 멀티턴에 매핑이 명확하고 SDK가 계속 지원.
+- **검증(Verify)**: `npm run build` 통과. 실제 호출 — 한국어(품절 인지+대체 추천+배송비),
+  영어 멀티턴, 번역 모두 정상 응답. (번역에 경미한 환각 관찰 — 부차 기능이라 보류)
+- **영향(Consequences)**: 로컬 챗봇 동작 확인. **배포측 조치 필요**: Vercel 환경변수에
+  `GEMINI_API_KEY` 추가(+ 기존 `ANTHROPIC_API_KEY` 제거)해야 프로덕션 챗봇이 실동작.

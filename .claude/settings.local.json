@@ -37,7 +37,16 @@
       "PowerShell(Get-Process *)",
       "Bash(npm uninstall *)",
       "Bash(npm pkg *)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\); console.log\\('better-sqlite3 dep:', p.dependencies['@prisma/adapter-better-sqlite3'] ?? 'removed ✓'\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\); console.log\\('better-sqlite3 dep:', p.dependencies['@prisma/adapter-better-sqlite3'] ?? 'removed ✓'\\)\")",
+      "Bash(grep -vE '^\\\\s*#|^\\\\s*$')",
+      "Bash(node -e \"const p=require\\('./package.json'\\); const all={...p.dependencies,...p.devDependencies}; const hit=Object.keys\\(all\\).filter\\(k=>/google|genai|gemini/i.test\\(k\\)\\); console.log\\(hit.length?hit.map\\(k=>k+': '+all[k]\\).join\\('\\\\n'\\):'없음'\\); console.log\\('anthropic:', all['@anthropic-ai/sdk']??'-'\\);\")",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('@google/genai:', p.dependencies['@google/genai']\\); console.log\\('@anthropic-ai/sdk:', p.dependencies['@anthropic-ai/sdk']??'removed ✓'\\)\")",
+      "PowerShell($c = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if \\($c\\) { $c.OwningProcess | Sort-Object -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force -ErrorAction Stop; Write-Output \"killed PID $_ on :3000\" } catch { Write-Output \"cant kill $_\" } } } else { Write-Output \"nothing on :3000\" })",
+      "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"locale\":\"ko\",\"messages\":[{\"role\":\"user\",\"content\":\"10달러 이하 키링 있어? 해외배송 돼?\"}]}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/chat -H \"Content-Type: application/json\" -d '{\"locale\":\"en\",\"messages\":[{\"role\":\"user\",\"content\":\"Any cheese cat goods?\"},{\"role\":\"assistant\",\"content\":\"Yes! We have Cheese Cat items.\"},{\"role\":\"user\",\"content\":\"Which ones are in stock under $10?\"}]}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/translate -H \"Content-Type: application/json\" -d '{\"text\":\"가볍고 귀여운 아크릴 키링이에요.\"}')"
     ]
   }
 }

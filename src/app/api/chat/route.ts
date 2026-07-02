@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { getCatalogForContext } from "@/lib/queries";
 import { getPopupStatus, STATUS_LABELS } from "@/lib/popup-status";
 import { SHIPPING_FEES_KRW } from "@/lib/config";
-import { getAnthropic, hasApiKey, CHAT_MODEL } from "@/lib/ai";
+import { getGemini, hasApiKey, CHAT_MODEL } from "@/lib/ai";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -57,26 +57,38 @@ export async function POST(req: Request) {
   if (!hasApiKey()) {
     const reply =
       lang === "en"
-        ? "The AI helper isn't connected yet. Add ANTHROPIC_API_KEY to your .env to enable real answers. (Everything else works!)"
-        : "아직 AI가 연결되지 않았어요. .env 파일에 ANTHROPIC_API_KEY를 넣으면 실제 답변이 작동합니다. (나머지 기능은 모두 동작해요!)";
+        ? "The AI helper isn't connected yet. Add GEMINI_API_KEY to your .env to enable real answers. (Everything else works!)"
+        : "아직 AI가 연결되지 않았어요. .env 파일에 GEMINI_API_KEY를 넣으면 실제 답변이 작동합니다. (나머지 기능은 모두 동작해요!)";
     return NextResponse.json({ reply });
   }
 
   try {
-    const anthropic = getAnthropic();
-    const response = await anthropic.messages.create({
+    const ai = getGemini();
+    const response = await ai.models.generateContent({
       model: CHAT_MODEL,
-      max_tokens: 400,
-      system: systemPrompt,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      // 클라이언트가 보낸 대화 기록을 Gemini 형식으로 변환(assistant → model).
+      contents: messages.map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      })),
+      config: {
+        systemInstruction: systemPrompt,
+        maxOutputTokens: 500,
+        // 간단한 쇼핑 안내라 사고(thinking) 예산 0 — 빠르고, 낮은 토큰 상한에서 빈 응답 방지.
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     });
-    const reply = response.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b.type === "text" ? b.text : ""))
-      .join("\n");
-    return NextResponse.json({ reply });
+    const reply = (response.text ?? "").trim();
+    return NextResponse.json({ reply: reply || t_error(lang) });
   } catch (err) {
     console.error("chat error", err);
     return NextResponse.json({ error: "chat failed" }, { status: 500 });
   }
+}
+
+// 빈 응답 폴백 문구
+function t_error(lang: "ko" | "en"): string {
+  return lang === "en"
+    ? "Sorry, I couldn't find an answer. Could you rephrase?"
+    : "죄송해요, 답을 찾지 못했어요. 다시 물어봐 주시겠어요?";
 }
