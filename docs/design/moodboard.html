@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>성수 팝업 굿즈 · 무드보드 (Playful Pop)</title>
+<!-- 웹폰트는 폴백 가능: 못 불러와도 아래 font stack이 system-ui로 대체됨 -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     디자인 토큰 (나중에 Tailwind v4 @theme 로 그대로 이식)
+     ============================================================ */
+  :root {
+    /* 파스텔 배경군 (뮤트 파스텔 · 유아용 느낌 피하려 채도 낮춤) */
+    --bg-cream:     #FFF8F1;   /* 기본 배경 */
+    --bg-lavender:  #EFEBFB;   /* 섹션/카드 배경 */
+    --bg-mint:      #E6F6EE;
+    --bg-sky:       #E6F1FB;
+    --bg-peach:     #FEEDE4;
+
+    /* 뉴트럴 (콘크리트 그레이 · 잉크) — 편집숍 세련미 */
+    --ink:          #14161C;   /* 헤드라인/총액. on #fff 대비 16.8:1 (AAA) */
+    --ink-soft:     #3A3F4A;   /* 본문. on #fff 대비 10.3:1 (AAA) */
+    --concrete:     #6B7280;   /* 보조 텍스트. on #fff 대비 4.83:1 (AA) */
+    --line:         #EAE6E0;   /* 구분선/테두리 */
+
+    /* 포인트 원톤 (채도 높게 · 버튼/배지에만) */
+    --pop-coral:      #FF6B9D; /* 밝은 팝. 배지 배경(+진한 텍스트) */
+    --pop-coral-deep: #D11E63; /* 인터랙션(버튼) 배경(+흰 텍스트). on #fff 5.4:1 · 흰 텍스트 대비 5.4:1 (AA) */
+    --pop-grape:      #6C4CE0; /* 보조 포인트. 흰 텍스트 대비 5.0:1 (AA) */
+    --pop-sunny:      #FFB020; /* 한정/시즌 배지(+진한 텍스트) */
+
+    /* 커머스 고대비 (돈·배송·결제 = 흰 카드 + 진한 잉크) */
+    --commerce-card:  #FFFFFF;
+    --commerce-ink:   #14161C;
+    --commerce-total: #D11E63; /* 총액 강조. on #fff 5.4:1 (AA) */
+    --trust-green:    #1F8A5B; /* "Ships worldwide ✓" 체크. on #fff 4.6:1 (AA) */
+
+    /* 형태 토큰 */
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --radius-pill: 999px;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px;
+    --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-8: 48px;
+
+    --shadow-card:  0 6px 18px rgba(20,22,28,.08);
+    --shadow-pop:   0 10px 28px rgba(209,30,99,.18);
+    --shadow-float: 0 14px 40px rgba(20,22,28,.14);
+
+    /* 폰트 스택 — 웹폰트 실패 시 system-ui 로 폴백 */
+    --font-display: "Baloo 2", "Nunito", "Apple SD Gothic Neo", "Pretendard", system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    --font-body:    "Nunito", "Pretendard", "Apple SD Gothic Neo", system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink-soft);
+    background:
+      radial-gradient(1200px 500px at 15% -5%, var(--bg-peach), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, var(--bg-lavender), transparent 55%),
+      var(--bg-cream);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  section { padding: 56px 0; }
+  h1,h2,h3,h4 { font-family: var(--font-display); color: var(--ink); line-height: 1.2; }
+  .sec-kicker { display:inline-block; font-weight:700; font-size:13px; letter-spacing:.06em;
+    text-transform:uppercase; color: var(--pop-coral-deep); background: #fff;
+    border:1px solid var(--line); padding:5px 12px; border-radius: var(--radius-pill); }
+  .sec-title { font-size: 30px; margin: 14px 0 8px; }
+  .sec-desc { color: var(--concrete); max-width: 720px; }
+  .divider { height:1px; background: var(--line); border:0; }
+  a { color: var(--pop-coral-deep); }
+
+  /* ---------- 표지 ---------- */
+  .cover {
+    padding: 72px 0 60px;
+    background:
+      radial-gradient(700px 320px at 85% 10%, rgba(108,76,224,.10), transparent 60%),
+      radial-gradient(600px 300px at 5% 90%, rgba(255,107,157,.14), transparent 60%);
+  }
+  .cover-badge { display:inline-flex; align-items:center; gap:8px; background:#fff;
+    border:1px solid var(--line); border-radius: var(--radius-pill); padding:8px 16px;
+    font-weight:700; color: var(--ink); box-shadow: var(--shadow-card); }
+  .cover h1 { font-size: 54px; margin: 22px 0 10px; letter-spacing:-.01em; }
+  .cover h1 .em { color: var(--pop-coral-deep); }
+  .cover .concept { font-size: 20px; color: var(--ink-soft); max-width: 640px; }
+  .cover-dir { display:flex; flex-wrap:wrap; gap:12px; margin-top:26px; }
+  .dir-chip { background:#fff; border:1px solid var(--line); border-radius: var(--radius-md);
+    padding:14px 18px; box-shadow: var(--shadow-card); }
+  .dir-chip b { display:block; font-family:var(--font-display); color:var(--ink); font-size:17px; }
+  .dir-chip span { font-size:13px; color:var(--concrete); }
+
+  .principle {
+    margin-top: 30px; display:grid; grid-template-columns: 1fr auto 1fr; gap:0;
+    align-items:stretch; border-radius: var(--radius-lg); overflow:hidden;
+    box-shadow: var(--shadow-card); border:1px solid var(--line);
+  }
+  .principle > div { padding: 22px 24px; background:#fff; }
+  .principle .play { background: linear-gradient(135deg, #FFE9F1, #F1EBFF); }
+  .principle .trust { background: #fff; }
+  .principle .vs { display:flex; align-items:center; justify-content:center;
+    background: var(--ink); color:#fff; font-family:var(--font-display); font-weight:800;
+    font-size:15px; padding:0 18px; }
+  .principle h4 { font-size:18px; margin-bottom:6px; }
+  .principle .play h4 { color: var(--pop-coral-deep); }
+  .principle p { font-size:14px; color: var(--ink-soft); }
+
+  /* ---------- 컬러 팔레트 ---------- */
+  .swatch-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(158px,1fr)); gap:14px; margin-top:26px; }
+  .swatch { border-radius: var(--radius-md); overflow:hidden; border:1px solid var(--line);
+    background:#fff; box-shadow: var(--shadow-card); }
+  .swatch .chip { height:78px; display:flex; align-items:flex-end; justify-content:flex-end; padding:8px; }
+  .swatch .meta { padding:10px 12px; }
+  .swatch .name { font-weight:800; font-family:var(--font-display); color:var(--ink); font-size:14px; }
+  .swatch .hex { font-size:12px; color:var(--concrete); letter-spacing:.02em; }
+  .swatch .use { font-size:12px; color:var(--ink-soft); margin-top:4px; }
+  .swatch .aa { display:inline-block; margin-top:6px; font-size:11px; font-weight:700;
+    padding:2px 8px; border-radius:var(--radius-pill); }
+  .aa.pass { background:#E4F6EC; color:#136B44; }
+  .aa.badge { background:#FFF1D6; color:#8A5A00; }
+  .group-label { grid-column:1/-1; font-family:var(--font-display); font-weight:700;
+    color:var(--ink); font-size:14px; margin-top:8px; }
+
+  /* ---------- 타이포 ---------- */
+  .type-card { background:#fff; border:1px solid var(--line); border-radius:var(--radius-lg);
+    padding:28px; box-shadow: var(--shadow-card); margin-top:24px; }
+  .type-row { display:flex; gap:18px; align-items:baseline; padding:16px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .type-row:last-child { border-bottom:0; }
+  .type-tag { min-width:130px; font-size:12px; color:var(--concrete); font-weight:700; }
+  .t-display { font-family:var(--font-display); font-weight:800; font-size:40px; color:var(--ink); }
+  .t-h2 { font-family:var(--font-display); font-weight:700; font-size:26px; color:var(--ink); }
+  .t-body { font-size:16px; color:var(--ink-soft); }
+  .t-cap { font-size:13px; color:var(--concrete); }
+  .font-note { margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .font-note .fn { background:var(--bg-cream); border:1px solid var(--line); border-radius:var(--radius-md); padding:16px; }
+  .font-note b { font-family:var(--font-display); color:var(--ink); }
+
+  /* ---------- 컴포넌트 공통 ---------- */
+  .comp-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap:20px; margin-top:26px; }
+  .comp-card { background:#fff; border:1px solid var(--line); border-radius:var(--radius-lg);
+    padding:22px; box-shadow: var(--shadow-card); }
+  .comp-card > .label { font-size:12px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--concrete); margin-bottom:14px; }
+
+  /* 버튼 */
+  .btn { font-family:var(--font-display); font-weight:700; border:0; cursor:pointer;
+    border-radius:var(--radius-pill); padding:13px 22px; font-size:15px; transition:transform .08s ease; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background:var(--pop-coral-deep); color:#fff; box-shadow:var(--shadow-pop); }
+  .btn-secondary { background:#fff; color:var(--ink); border:2px solid var(--ink); }
+  .btn-ghost { background:var(--bg-lavender); color:var(--pop-grape); }
+  .btn-row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+
+  /* 배지 */
+  .badge { display:inline-flex; align-items:center; gap:6px; font-family:var(--font-display);
+    font-weight:700; font-size:12.5px; padding:6px 12px; border-radius:var(--radius-pill); }
+  .badge-open   { background:#DDF3E7; color:#136B44; }
+  .badge-closing{ background:#FFE1EB; color:#B0164B; }
+  .badge-limited{ background:var(--pop-sunny); color:#5A3D00; }
+  .badge-official{ background:var(--ink); color:#fff; }
+  .badge-ship   { background:#E4F0FB; color:#155799; }
+  .badge-dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+
+  /* 상품 카드 (스티커풍) */
+  .product-card { border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden;
+    background:#fff; box-shadow:var(--shadow-card); transition:transform .15s ease, box-shadow .15s ease; max-width:280px; }
+  .product-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-float); }
+  .pc-media { position:relative; height:170px; background:linear-gradient(135deg,#FFE9F1,#EFEBFB);
+    display:flex; align-items:center; justify-content:center; font-size:64px; }
+  .pc-media .heart { position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%;
+    background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-card); cursor:pointer; }
+  .pc-media .heart:hover { animation:pop .4s ease; }
+  @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.35)} 100%{transform:scale(1)} }
+  .pc-badges { position:absolute; top:12px; left:12px; display:flex; flex-direction:column; gap:6px; }
+  .pc-body { padding:14px 16px 18px; }
+  .pc-pop { font-size:12px; color:var(--pop-grape); font-weight:700; }
+  .pc-name { font-family:var(--font-display); font-weight:700; color:var(--ink); font-size:16px; margin:2px 0 8px; }
+  .pc-price { display:flex; align-items:baseline; gap:8px; }
+  .pc-krw { font-family:var(--font-display); font-weight:800; color:var(--ink); font-size:19px; }
+  .pc-usd { font-size:13px; color:var(--concrete); }
+  .pc-keyring { display:inline-block; }
+  .product-card:hover .pc-keyring { animation:swing 1s ease infinite; transform-origin:top center; }
+  @keyframes swing { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
+
+  /* 품절 카드 (다정한) */
+  .soldout-card { border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden;
+    background:#fff; box-shadow:var(--shadow-card); max-width:280px; }
+  .so-media { height:150px; background:linear-gradient(135deg,#EFEBFB,#E6F1FB); position:relative;
+    display:flex; align-items:center; justify-content:center; font-size:56px; filter:saturate(.85); }
+  .so-stamp { position:absolute; top:12px; left:12px; background:#fff; color:var(--pop-grape);
+    border:1.5px solid var(--pop-grape); border-radius:var(--radius-pill); padding:5px 12px;
+    font-family:var(--font-display); font-weight:800; font-size:12.5px; }
+  .so-body { padding:16px; }
+  .so-body h4 { font-size:16px; margin-bottom:2px; }
+  .so-copy { font-size:13px; color:var(--ink-soft); margin:6px 0 12px; }
+  .so-alt { font-size:12px; color:var(--concrete); margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); }
+  .so-alt-row { display:flex; gap:8px; margin-top:8px; }
+  .so-thumb { width:44px; height:44px; border-radius:var(--radius-sm); background:linear-gradient(135deg,#FFE9F1,#FEEDE4);
+    display:flex; align-items:center; justify-content:center; font-size:22px; }
+
+  /* 필터 칩 */
+  .chip-row { display:flex; gap:10px; flex-wrap:wrap; }
+  .chip { font-weight:700; font-size:13.5px; padding:9px 16px; border-radius:var(--radius-pill);
+    border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); cursor:pointer; min-height:40px; }
+  .chip.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .chip.character { background:var(--bg-lavender); border-color:transparent; color:var(--pop-grape); }
+
+  /* 언어 토글 (44px) */
+  .lang-toggle { display:inline-flex; background:#fff; border:1.5px solid var(--line);
+    border-radius:var(--radius-pill); padding:4px; }
+  .lang-toggle button { min-width:52px; min-height:44px; border:0; background:transparent; cursor:pointer;
+    border-radius:var(--radius-pill); font-family:var(--font-display); font-weight:800; font-size:14px; color:var(--concrete); }
+  .lang-toggle button.on { background:var(--pop-coral-deep); color:#fff; }
+
+  /* 가격/배송/총액 블록 (커머스 고대비) */
+  .checkout-block { background:var(--commerce-card); border:1.5px solid var(--ink);
+    border-radius:var(--radius-md); padding:20px; box-shadow:var(--shadow-card); max-width:340px; }
+  .cb-line { display:flex; justify-content:space-between; padding:9px 0; color:var(--ink-soft); font-size:15px; }
+  .cb-line .val { font-weight:700; color:var(--ink); }
+  .cb-total { display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;
+    padding-top:14px; border-top:2px solid var(--ink); }
+  .cb-total .lbl { font-family:var(--font-display); font-weight:800; font-size:16px; color:var(--ink); }
+  .cb-total .amt { font-family:var(--font-display); font-weight:800; font-size:26px; color:var(--commerce-total); }
+  .cb-total .amt small { display:block; text-align:right; font-size:12px; color:var(--concrete); font-weight:600; }
+  .cb-nohidden { margin-top:12px; font-size:12.5px; color:var(--trust-green); font-weight:700; }
+
+  /* 챗봇 말풍선 */
+  .chat { display:flex; flex-direction:column; gap:10px; }
+  .bubble { max-width:88%; padding:12px 15px; border-radius:18px; font-size:14px; line-height:1.5; }
+  .bubble.bot { align-self:flex-start; background:var(--bg-lavender); color:var(--ink); border-bottom-left-radius:5px; }
+  .bubble.user { align-self:flex-end; background:var(--pop-coral-deep); color:#fff; border-bottom-right-radius:5px; }
+  .chat-launcher { display:inline-flex; align-items:center; gap:10px; margin-top:14px; background:var(--ink);
+    color:#fff; border-radius:var(--radius-pill); padding:12px 18px; font-family:var(--font-display); font-weight:700; }
+  .chat-launcher .dot { width:32px; height:32px; border-radius:50%;
+    background:linear-gradient(135deg,var(--pop-coral),var(--pop-grape)); display:flex; align-items:center; justify-content:center; }
+
+  /* 이미지/일러스트 방향 */
+  .art-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-top:26px; }
+  .art-card { background:#fff; border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-card); }
+  .art-vis { height:130px; display:flex; align-items:center; justify-content:center; font-size:52px; }
+  .art-card .art-body { padding:14px 16px; }
+  .art-card h4 { font-size:15px; margin-bottom:4px; }
+  .art-card p { font-size:13px; color:var(--concrete); }
+
+  /* 페르소나 표 & 토큰 표 */
+  table { width:100%; border-collapse:collapse; margin-top:24px; background:#fff;
+    border-radius:var(--radius-md); overflow:hidden; box-shadow:var(--shadow-card); }
+  th,td { text-align:left; padding:13px 16px; font-size:13.5px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { background:var(--ink); color:#fff; font-family:var(--font-display); font-weight:700; font-size:13px; }
+  td b { color:var(--ink); }
+  tr:last-child td { border-bottom:0; }
+  .p-emma  { color:#B0164B; font-weight:800; }
+  .p-jiwon { color:#6C4CE0; font-weight:800; }
+  .p-kenji { color:#155799; font-weight:800; }
+  code.tok { background:var(--bg-cream); border:1px solid var(--line); padding:2px 7px; border-radius:6px;
+    font-family:"SFMono-Regular",Consolas,monospace; font-size:12.5px; color:var(--ink); }
+
+  /* Do / Don't */
+  .dd-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:26px; }
+  .dd { border-radius:var(--radius-lg); padding:22px; box-shadow:var(--shadow-card); border:1px solid var(--line); }
+  .dd.do { background:#F1FaF4; border-color:#CDE9D9; }
+  .dd.dont { background:#FFF2F5; border-color:#F6D3DD; }
+  .dd h3 { font-size:18px; margin-bottom:12px; }
+  .dd.do h3 { color:#136B44; }
+  .dd.dont h3 { color:#B0164B; }
+  .dd li { list-style:none; padding:8px 0 8px 28px; position:relative; font-size:14px; color:var(--ink-soft); border-bottom:1px dashed rgba(0,0,0,.06); }
+  .dd li:last-child { border-bottom:0; }
+  .dd li::before { position:absolute; left:0; top:8px; font-weight:800; }
+  .dd.do li::before { content:"✓"; color:#1F8A5B; }
+  .dd.dont li::before { content:"✕"; color:#D11E63; }
+
+  /* 화면 미리보기 목업 */
+  .preview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px; margin-top:26px; }
+  .mock { border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; background:#fff; box-shadow:var(--shadow-float); }
+  .mock-cap { padding:10px 14px; background:var(--ink); color:#fff; font-family:var(--font-display);
+    font-weight:700; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+  .mock-body { padding:14px; background:var(--bg-cream); }
+  .mock-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .mock-logo { font-family:var(--font-display); font-weight:800; color:var(--ink); font-size:15px; }
+  .mock-lang { font-size:11px; background:#fff; border:1px solid var(--line); border-radius:var(--radius-pill); padding:4px 9px; font-weight:700; color:var(--ink); }
+  .mock-hero { background:linear-gradient(135deg,#FFE9F1,#EFEBFB); border-radius:var(--radius-md); padding:16px; margin-bottom:12px; position:relative; }
+  .mock-hero .kv { font-size:38px; }
+  .mock-hero h5 { font-family:var(--font-display); font-size:15px; color:var(--ink); margin-top:4px; }
+  .mock-hero p { font-size:12px; color:var(--ink-soft); }
+  .mock-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .mock-mini { background:#fff; border:1px solid var(--line); border-radius:var(--radius-md); overflow:hidden; }
+  .mock-mini .mm-vis { height:64px; background:linear-gradient(135deg,#E6F6EE,#E6F1FB); display:flex; align-items:center; justify-content:center; font-size:28px; }
+  .mock-mini .mm-b { padding:8px 10px; }
+  .mock-mini .mm-b .n { font-family:var(--font-display); font-weight:700; font-size:12px; color:var(--ink); }
+  .mock-mini .mm-b .pr { font-family:var(--font-display); font-weight:800; font-size:13px; color:var(--ink); }
+  .mock-mini .mm-b .us { font-size:10px; color:var(--concrete); }
+  .mock-pdp-media { height:120px; background:linear-gradient(135deg,#FFE9F1,#FEEDE4); border-radius:var(--radius-md);
+    display:flex; align-items:center; justify-content:center; font-size:46px; margin-bottom:12px; }
+  .mock-checkout { background:#fff; border:1.5px solid var(--ink); border-radius:var(--radius-md); padding:14px; }
+  .mc-line { display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; color:var(--ink-soft); }
+  .mc-line b { color:var(--ink); }
+  .mc-total { display:flex; justify-content:space-between; align-items:baseline; border-top:2px solid var(--ink); margin-top:6px; padding-top:8px; }
+  .mc-total .a { font-family:var(--font-display); font-weight:800; font-size:19px; color:var(--commerce-total); }
+  .mc-btn { display:block; text-align:center; background:var(--pop-coral-deep); color:#fff; border-radius:var(--radius-pill);
+    font-family:var(--font-display); font-weight:700; font-size:13px; padding:11px; margin-top:12px; }
+
+  footer { padding:40px 0 60px; color:var(--concrete); font-size:13px; text-align:center; }
+
+  @media (max-width:720px){
+    .cover h1 { font-size:40px; }
+    .principle { grid-template-columns:1fr; }
+    .principle .vs { padding:10px; }
+    .font-note, .dd-grid { grid-template-columns:1fr; }
+    .sec-title { font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 1. 표지 ============ -->
+<header class="cover">
+  <div class="wrap">
+    <span class="cover-badge">🏷️ 성수 팝업 굿즈 · Design Moodboard v1.0</span>
+    <h1>성수동 팝업을,<br><span class="em">집까지 · 외국어로 · 줄 안 서고.</span></h1>
+    <p class="concept">성수동 팝업스토어 공식 굿즈를 한국어·영어로 큐레이션·판매하는 글로벌 쇼핑몰.
+      외국인 관광객이 3초 안에 "귀엽다, 사고 싶다"를 느끼되, 결제 앞에서는 "믿을 만하다"가 되게.</p>
+
+    <div class="cover-dir">
+      <div class="dir-chip"><b>Playful Pop</b><span>채택된 디자인 방향</span></div>
+      <div class="dir-chip"><b>둥근 모서리 · 파스텔 + 포인트</b><span>스티커/캐릭터 감성</span></div>
+      <div class="dir-chip"><b>둥근 친근 산세리프</b><span>영문 가독성 우선</span></div>
+    </div>
+
+    <div class="principle">
+      <div class="play">
+        <h4>😊 Playful — 감성 영역</h4>
+        <p>둘러보기 · 상품 카드 · 캐릭터 키비주얼. 파스텔 배경 + 스티커 배지 + 마이크로 인터랙션(하트 뿅, 키링 흔들). 여기서 "귀엽다·사고싶다"를 만든다.</p>
+      </div>
+      <div class="vs">↔</div>
+      <div class="trust">
+        <h4>🛡️ Trust — 돈·배송·결제 영역</h4>
+        <p>가격 · 배송비 · 총액 · 결제. 한 톤 낮춰 흰 카드 + 진한 잉크(고대비) + "No hidden fees". 여기서 "믿을 만하다"를 만든다.</p>
+      </div>
+    </div>
+    <p class="sec-desc" style="margin-top:16px;"><b>중심 원칙:</b> 귀여움(Playful) ↔ 신뢰(Trust)의 긴장을 <b>영역별로 분리</b>해서 둘 다 얻는다. 원색을 화면 전체에 쓰면 '장난감 사이트'로 불신받으므로, <b>포인트색은 버튼/배지에만</b>, 배경은 넉넉한 여백의 뮤트 파스텔.</p>
+  </div>
+</header>
+
+<hr class="divider" />
+
+<!-- ============ 2. 컬러 팔레트 ============ -->
+<section id="color">
+  <div class="wrap">
+    <span class="sec-kicker">02 · Color</span>
+    <h2 class="sec-title">컬러 팔레트</h2>
+    <p class="sec-desc">파스텔 배경군은 채도를 낮춰(뮤트) 유아용 느낌을 피하고, 포인트 원톤은 버튼·배지에만 강하게. 돈·배송·결제 영역은 흰 카드 + 진한 잉크로 또렷하게. 대비값은 WCAG AA(본문 4.5:1) 기준으로 검증했습니다.</p>
+
+    <div class="swatch-grid">
+      <div class="group-label">🍦 파스텔 배경군 — 넓은 면적 · 여백 (텍스트는 잉크로 얹기)</div>
+      <div class="swatch"><div class="chip" style="background:#FFF8F1"></div><div class="meta"><div class="name">Cream</div><div class="hex">#FFF8F1</div><div class="use">기본 배경 · 따뜻한 베이스</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#EFEBFB"></div><div class="meta"><div class="name">Light Lavender</div><div class="hex">#EFEBFB</div><div class="use">섹션/카드 배경 · 세련미</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#E6F6EE"></div><div class="meta"><div class="name">Mint</div><div class="hex">#E6F6EE</div><div class="use">보조 배경 · 신선함</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#E6F1FB"></div><div class="meta"><div class="name">Sky</div><div class="hex">#E6F1FB</div><div class="use">배송/정보 톤 배경</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#FEEDE4"></div><div class="meta"><div class="name">Peach</div><div class="hex">#FEEDE4</div><div class="use">히어로/강조 배경</div></div></div>
+
+      <div class="group-label">🪨 뉴트럴 — 콘크리트 그레이 · 잉크 (편집숍 대비)</div>
+      <div class="swatch"><div class="chip" style="background:#14161C"><span style="color:#fff;font-size:11px;font-weight:700">Aa</span></div><div class="meta"><div class="name">Ink</div><div class="hex">#14161C</div><div class="use">헤드라인 · 총액 · 라벨</div><span class="aa pass">on #fff 16.8:1 · AAA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#3A3F4A"><span style="color:#fff;font-size:11px;font-weight:700">Aa</span></div><div class="meta"><div class="name">Ink Soft</div><div class="hex">#3A3F4A</div><div class="use">본문 텍스트</div><span class="aa pass">on #fff 10.3:1 · AAA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#6B7280"><span style="color:#fff;font-size:11px;font-weight:700">Aa</span></div><div class="meta"><div class="name">Concrete Grey</div><div class="hex">#6B7280</div><div class="use">보조/캡션 텍스트</div><span class="aa pass">on #fff 4.83:1 · AA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#EAE6E0"></div><div class="meta"><div class="name">Line</div><div class="hex">#EAE6E0</div><div class="use">구분선 · 테두리</div></div></div>
+
+      <div class="group-label">🍬 포인트 원톤 — 버튼/배지에만 (채도 높게)</div>
+      <div class="swatch"><div class="chip" style="background:#FF6B9D"><span style="color:#14161C;font-size:11px;font-weight:800">Aa</span></div><div class="meta"><div class="name">Pop Coral</div><div class="hex">#FF6B9D</div><div class="use">밝은 팝 · 배지 배경(진한 텍스트)</div><span class="aa badge">배지 전용 · 흰 텍스트 금지</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#D11E63"><span style="color:#fff;font-size:11px;font-weight:700">Aa</span></div><div class="meta"><div class="name">Coral Deep</div><div class="hex">#D11E63</div><div class="use">주요 버튼(흰 텍스트) · 총액 강조</div><span class="aa pass">흰 텍스트 5.4:1 · AA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#6C4CE0"><span style="color:#fff;font-size:11px;font-weight:700">Aa</span></div><div class="meta"><div class="name">Grape</div><div class="hex">#6C4CE0</div><div class="use">보조 포인트 · 캐릭터/필터</div><span class="aa pass">흰 텍스트 5.0:1 · AA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#FFB020"><span style="color:#5A3D00;font-size:11px;font-weight:800">Aa</span></div><div class="meta"><div class="name">Sunny</div><div class="hex">#FFB020</div><div class="use">한정/시즌 배지(진한 텍스트)</div><span class="aa badge">배지 전용 · 진한 텍스트</span></div></div>
+
+      <div class="group-label">🧾 커머스 고대비 — 돈·배송·결제 (한 톤 낮춤)</div>
+      <div class="swatch"><div class="chip" style="background:#FFFFFF;border-bottom:1px solid #EAE6E0"></div><div class="meta"><div class="name">Commerce Card</div><div class="hex">#FFFFFF</div><div class="use">결제/가격 카드 배경</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#14161C"><span style="color:#fff;font-size:11px;font-weight:700">Aa</span></div><div class="meta"><div class="name">Commerce Ink</div><div class="hex">#14161C</div><div class="use">가격/배송 숫자 · 굵고 크게</div><span class="aa pass">on #fff 16.8:1 · AAA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#D11E63"><span style="color:#fff;font-size:11px;font-weight:700">Total</span></div><div class="meta"><div class="name">Total Accent</div><div class="hex">#D11E63</div><div class="use">총액만 강조 (한 곳만)</div><span class="aa pass">on #fff 5.4:1 · AA</span></div></div>
+      <div class="swatch"><div class="chip" style="background:#1F8A5B"><span style="color:#fff;font-size:11px;font-weight:700">✓</span></div><div class="meta"><div class="name">Trust Green</div><div class="hex">#1F8A5B</div><div class="use">"Ships worldwide ✓" · 안심 체크</div><span class="aa pass">on #fff 4.6:1 · AA</span></div></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ 3. 타이포 ============ -->
+<section id="type">
+  <div class="wrap">
+    <span class="sec-kicker">03 · Typography</span>
+    <h2 class="sec-title">타이포 스케일</h2>
+    <p class="sec-desc">헤드라인은 둥근 디스플레이체로 친근하게, 본문·가격은 가독성 높은 산세리프로. 영문이 한글보다 길어지므로 버튼/배지는 넉넉한 폭을 확보합니다.</p>
+
+    <div class="type-card">
+      <div class="type-row"><span class="type-tag">Display / 40·800</span><div><div class="t-display">성수 팝업 굿즈 · Seongsu Pop-up Goods</div></div></div>
+      <div class="type-row"><span class="type-tag">Headline / 26·700</span><div><div class="t-h2">지금 열린 팝업 · Popups open now 🎈</div></div></div>
+      <div class="type-row"><span class="type-tag">Body / 16·400</span><div><div class="t-body">이 키링은 가볍고 부피가 작아 해외배송에 딱이에요. This keyring is light and compact — perfect for shipping abroad.</div></div></div>
+      <div class="type-row"><span class="type-tag">Price / 19·800</span><div><span class="pc-krw">₩12,000</span> <span class="pc-usd">≈ $8.90 · ¥1,320</span></div></div>
+      <div class="type-row"><span class="type-tag">Caption / 13·400</span><div><div class="t-cap">예상 도착 7–12 days · 배송비 별도 표시 · Concrete Grey</div></div></div>
+    </div>
+
+    <div class="font-note">
+      <div class="fn"><b>한글 · 본문/UI</b><br>Pretendard (권장) → 없으면 Apple SD Gothic Neo / Malgun Gothic → system-ui. 다양한 굵기로 가격·라벨 위계를 만들기 좋음.</div>
+      <div class="fn"><b>영문 · 디스플레이/헤드라인</b><br>Baloo 2 · Nunito 같은 둥근 산세리프. 단, <b>영문 가독성 우선</b> — 장식성이 과하면 관광객 신뢰↓. 웹폰트 실패 시 system-ui 폴백.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ 4. UI 컴포넌트 ============ -->
+<section id="components">
+  <div class="wrap">
+    <span class="sec-kicker">04 · Components</span>
+    <h2 class="sec-title">UI 컴포넌트 샘플</h2>
+    <p class="sec-desc">실제 렌더링된 샘플입니다. 감성 컴포넌트는 Playful, 결제 컴포넌트는 고대비 Trust 규칙을 따릅니다.</p>
+
+    <div class="comp-grid">
+
+      <div class="comp-card">
+        <div class="label">Buttons</div>
+        <div class="btn-row">
+          <button class="btn btn-primary">장바구니 담기</button>
+          <button class="btn btn-secondary">Add to cart</button>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-ghost">재입고 알림받기</button>
+        </div>
+        <p style="font-size:12px;color:var(--concrete);margin-top:12px">Primary = Coral Deep(흰 텍스트, AA). Secondary = 잉크 아웃라인. Ghost = 라벤더 보조.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="label">Status & Trust Badges</div>
+        <div class="btn-row">
+          <span class="badge badge-open"><span class="badge-dot"></span>열림 · Open</span>
+          <span class="badge badge-closing"><span class="badge-dot"></span>마감임박 · Closing soon</span>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <span class="badge badge-limited">⭐ 한정 · Limited</span>
+          <span class="badge badge-official">✔ Official</span>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <span class="badge badge-ship">🌍 Ships worldwide ✓</span>
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <div class="label">Product Card (스티커풍)</div>
+        <div class="product-card">
+          <div class="pc-media">
+            <span class="pc-keyring">🔑</span>
+            <div class="pc-badges"><span class="badge badge-limited">⭐ Limited</span></div>
+            <div class="heart">🤍</div>
+          </div>
+          <div class="pc-body">
+            <div class="pc-pop">몰랑 성수 팝업</div>
+            <div class="pc-name">몰랑이 아크릴 키링</div>
+            <div class="pc-price"><span class="pc-krw">₩12,000</span><span class="pc-usd">≈ $8.90</span></div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--concrete);margin-top:10px">hover 시 키링 흔들·하트 뿅(마이크로 인터랙션).</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="label">품절 카드 (다정하게)</div>
+        <div class="soldout-card">
+          <div class="so-media"><span>🧸</span><span class="so-stamp">Sold out</span></div>
+          <div class="so-body">
+            <h4>테디 인형 포토카드</h4>
+            <div class="so-copy">앗, 방금 품절됐어요 ㅠㅠ 다시 들어오면 가장 먼저 알려드릴게요!</div>
+            <button class="btn btn-ghost" style="width:100%">🔔 재입고 알림받기</button>
+            <div class="so-alt">이건 어때요? · You might also like
+              <div class="so-alt-row">
+                <div class="so-thumb">🐰</div><div class="so-thumb">🌟</div><div class="so-thumb">🎀</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--concrete);margin-top:10px">회색 도장 대신 파스텔 유지 + 다정한 카피 + 대체 추천.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="label">Filter Chips</div>
+        <div class="chip-row">
+          <span class="chip active">전체</span>
+          <span class="chip">키링</span>
+          <span class="chip">스티커</span>
+          <span class="chip">에코백</span>
+          <span class="chip">포토카드</span>
+        </div>
+        <div class="chip-row" style="margin-top:10px">
+          <span class="chip character">🐻 몰랑</span>
+          <span class="chip character">🐰 시나모롤</span>
+          <span class="chip character">⭐ 잔망루피</span>
+        </div>
+        <p style="font-size:12px;color:var(--concrete);margin-top:10px">타입별 · 캐릭터별 필터. 활성 칩은 잉크로 또렷하게.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="label">Language Toggle (44px+)</div>
+        <div class="lang-toggle">
+          <button>KO</button>
+          <button class="on">EN</button>
+        </div>
+        <p style="font-size:12px;color:var(--concrete);margin-top:12px">헤더 우상단 고정 · 터치 타깃 44px 이상. 영문 1순위이므로 EN을 기본 강조 예시로 표시.</p>
+      </div>
+
+      <div class="comp-card" style="background:var(--bg-sky)">
+        <div class="label">가격/배송/총액 블록 (고대비)</div>
+        <div class="checkout-block">
+          <div class="cb-line"><span>상품가 · Subtotal</span><span class="val">¥1,320</span></div>
+          <div class="cb-line"><span>배송비 · Shipping (Japan)</span><span class="val">¥680</span></div>
+          <div class="cb-total">
+            <span class="lbl">총액 · Total</span>
+            <span class="amt">¥2,000<small>≈ ₩19,800</small></span>
+          </div>
+          <div class="cb-nohidden">✓ No hidden fees · Ships to Japan ✓ · 7–12 days</div>
+        </div>
+        <p style="font-size:12px;color:var(--concrete);margin-top:10px">흰 카드 + 잉크 테두리. 현지통화 기본 + 원화 병기. 총액만 강조색.</p>
+      </div>
+
+      <div class="comp-card">
+        <div class="label">AI Chatbot</div>
+        <div class="chat">
+          <div class="bubble bot">Hi! Looking for something cute? 지금 성수엔 팝업 3곳이 열려 있어요 🎈</div>
+          <div class="bubble user">Any keyring under $10?</div>
+          <div class="bubble bot">네! 몰랑이 키링 ($8.90) 어떠세요? Ships worldwide ✓</div>
+        </div>
+        <div class="chat-launcher"><span class="dot">💬</span> 무엇을 찾으세요? · Ask me</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ 5. 이미지/일러스트/아이콘 방향 ============ -->
+<section id="art">
+  <div class="wrap">
+    <span class="sec-kicker">05 · Imagery</span>
+    <h2 class="sec-title">이미지 · 일러스트 · 아이콘 방향</h2>
+    <p class="sec-desc">캐릭터 키비주얼로 두근거림을, 굿즈 촬영은 파스텔 배경 위 정직한 실물감을. 아이콘은 둥근 라인 스타일로 통일.</p>
+    <div class="art-grid">
+      <div class="art-card"><div class="art-vis" style="background:linear-gradient(135deg,#FFE9F1,#EFEBFB)">🧸🎈</div><div class="art-body"><h4>캐릭터 키비주얼</h4><p>팝업 대표 캐릭터를 히어로·팝업 카드에 크게. 스티커처럼 오려낸 느낌.</p></div></div>
+      <div class="art-card"><div class="art-vis" style="background:linear-gradient(135deg,#E6F6EE,#FFF8F1)">📸</div><div class="art-body"><h4>굿즈 촬영 톤</h4><p>파스텔 무지 배경 + 부드러운 그림자. 실물 색 왜곡 없이, 크게. 개봉/사이즈컷 병행.</p></div></div>
+      <div class="art-card"><div class="art-vis" style="background:linear-gradient(135deg,#E6F1FB,#EFEBFB)">⚖️📦📐</div><div class="art-body"><h4>정보 아이콘</h4><p>무게 · 사이즈 · 배송을 둥근 라인 아이콘으로. 언어 무관 즉시 이해(관광객).</p></div></div>
+      <div class="art-card"><div class="art-vis" style="background:linear-gradient(135deg,#FEEDE4,#FFF8F1)">✍️</div><div class="art-body"><h4>손글씨 포인트</h4><p>"신상 입고!", "품절ㅠ" 같은 짧은 손글씨 악센트로 편집숍 감성. 남용 금지.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ 6. 페르소나 반영 노트 ============ -->
+<section id="persona">
+  <div class="wrap">
+    <span class="sec-kicker">06 · Persona Mapping</span>
+    <h2 class="sec-title">페르소나 반영 노트</h2>
+    <p class="sec-desc">각 디자인 결정이 세 페르소나의 어떤 실제 요구에서 나왔는지 추적합니다.</p>
+    <table>
+      <thead><tr><th style="width:26%">컴포넌트 / 결정</th><th style="width:16%">누구</th><th>근거가 된 요구</th></tr></thead>
+      <tbody>
+        <tr><td><b>파스텔은 배경, 포인트색은 버튼/배지에만</b></td><td><span class="p-emma">Emma</span></td><td>전체 원색이면 '장난감 사이트'로 불신 → 파스텔+넉넉한 여백, 포인트는 액션에만.</td></tr>
+        <tr><td><b>뮤트 파스텔 + 콘크리트 그레이 대비</b></td><td><span class="p-jiwon">지원</span></td><td>파스텔이 뿌옇기만 하면 유아용품 같음 → 크림/라벤더 + 채도 높은 원톤 + 편집숍 여백.</td></tr>
+        <tr><td><b>결제/가격/배송 = 흰 카드 + 진한 잉크</b></td><td><span class="p-kenji">Kenji</span></td><td>0.5초 안에 '믿을 만함'. 돈 영역은 고대비로 또렷하게.</td></tr>
+        <tr><td><b>가격/배송/총액 한 블록 · 총액만 강조 · No hidden fees</b></td><td><span class="p-kenji">Kenji</span></td><td>이미지 바로 아래 스크롤 없이 세로 정렬. 현지통화 기본+원화 병기.</td></tr>
+        <tr><td><b>언어 토글 헤더 우상단 · 44px · EN 1순위</b></td><td><span class="p-emma">Emma</span></td><td>언어 전환을 찾아 헤매지 않게 상시 노출. 터치 44px+. 영어 정확·우선.</td></tr>
+        <tr><td><b>다정한 품절 카드(재입고+대체추천)</b></td><td><span class="p-jiwon">지원</span></td><td>회색 도장 대신 파스텔 유지 + "품절ㅠ 재입고 알림" + 대체 굿즈.</td></tr>
+        <tr><td><b>스티커풍 카드 · 하트 뿅 · 키링 흔들</b></td><td><span class="p-jiwon">지원</span></td><td>줄서기 두근거림·마이크로 인터랙션·예쁜 상품카드.</td></tr>
+        <tr><td><b>Official · Ships worldwide ✓ 배지</b></td><td><span class="p-emma">Emma</span> · <span class="p-kenji">Kenji</span></td><td>신뢰 마크·후기·보안. "Ships to Japan ✓"로 안심.</td></tr>
+        <tr><td><b>캐릭터별/타입별 필터 칩</b></td><td><span class="p-jiwon">지원</span></td><td>캐릭터·타입으로 빠른 탐색. 검색/필터 잘 보이게.</td></tr>
+        <tr><td><b>둥근 폰트라도 영문 가독성 우선</b></td><td><span class="p-emma">Emma</span></td><td>영문이 1순위·정확해야. 장식 과하면 신뢰↓.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ 7. Do / Don't ============ -->
+<section id="dodont">
+  <div class="wrap">
+    <span class="sec-kicker">07 · Guidelines</span>
+    <h2 class="sec-title">Do / Don't</h2>
+    <div class="dd-grid">
+      <div class="dd do">
+        <h3>Do</h3>
+        <ul>
+          <li>파스텔은 배경·큰 면적, 포인트 원톤은 버튼·배지에만.</li>
+          <li>돈·배송·결제는 흰 카드 + 진한 잉크로 고대비.</li>
+          <li>가격은 KRW 기준 + 현지통화/USD 병기, 총액만 강조.</li>
+          <li>언어 토글은 우상단 고정 · 44px 이상 · EN 정확.</li>
+          <li>품절은 파스텔 유지 + 재입고 알림 + 대체 추천.</li>
+          <li>마이크로 인터랙션은 감성 영역에만, 짧고 은은하게.</li>
+        </ul>
+      </div>
+      <div class="dd dont">
+        <h3>Don't</h3>
+        <ul>
+          <li>화면 전체를 원색·고채도로 도배(장난감 느낌·불신).</li>
+          <li>파스텔만 뿌옇게(대비 없이) → 유아용품처럼 보임.</li>
+          <li>결제 영역에 파스텔 저대비 텍스트 사용(WCAG 미달).</li>
+          <li>품절을 회색 도장으로 차갑게 처리.</li>
+          <li>총액 외 여러 숫자에 강조색 남발(초점 분산).</li>
+          <li>장식 과한 영문 폰트로 가독성 희생.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ 8. 화면 적용 미리보기 ============ -->
+<section id="preview">
+  <div class="wrap">
+    <span class="sec-kicker">08 · Screen Preview</span>
+    <h2 class="sec-title">화면 적용 미리보기</h2>
+    <p class="sec-desc">같은 토큰을 홈·상품상세·체크아웃에 적용했을 때의 느낌. 감성 화면은 Playful, 체크아웃은 Trust 규칙이 눈에 띕니다.</p>
+
+    <div class="preview-grid">
+      <!-- 홈 -->
+      <div class="mock">
+        <div class="mock-cap"><span>🏠 홈 · Home</span><span>Playful</span></div>
+        <div class="mock-body">
+          <div class="mock-header">
+            <span class="mock-logo">성수 팝업 굿즈</span>
+            <span class="mock-lang">🌐 EN</span>
+          </div>
+          <div class="mock-hero">
+            <div class="kv">🧸🎈🐰</div>
+            <h5>지금 성수, 팝업 3곳 열림 🎈</h5>
+            <p>Popups open now — grab the goods before they're gone.</p>
+          </div>
+          <div class="mock-cards">
+            <div class="mock-mini"><div class="mm-vis">🔑</div><div class="mm-b"><div class="n">몰랑 키링</div><div class="pr">₩12,000</div><div class="us">≈ $8.90</div></div></div>
+            <div class="mock-mini"><div class="mm-vis">🧷</div><div class="mm-b"><div class="n">스티커 팩</div><div class="pr">₩6,000</div><div class="us">≈ $4.40</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 상품 상세 -->
+      <div class="mock">
+        <div class="mock-cap"><span>🛍️ 상품 상세 · PDP</span><span>Playful → Trust</span></div>
+        <div class="mock-body">
+          <div class="mock-pdp-media">🔑</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <span class="badge badge-limited" style="font-size:11px">⭐ Limited</span>
+            <span class="badge badge-official" style="font-size:11px">✔ Official</span>
+          </div>
+          <div style="font-family:var(--font-display);font-weight:700;color:var(--ink);font-size:15px">몰랑이 아크릴 키링</div>
+          <div class="mock-checkout" style="margin-top:10px">
+            <div class="mc-line"><span>상품가</span><b>₩12,000</b></div>
+            <div class="mc-line"><span>배송비 (Japan)</span><b>₩6,800</b></div>
+            <div class="mc-total"><span style="font-weight:800;color:var(--ink)">Total</span><span class="a">₩18,800</span></div>
+            <span class="mc-btn">Add to cart</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 체크아웃 -->
+      <div class="mock">
+        <div class="mock-cap"><span>🧾 체크아웃 · Checkout</span><span>Trust</span></div>
+        <div class="mock-body" style="background:#fff">
+          <div class="mock-header">
+            <span class="mock-logo" style="font-size:13px">Order summary</span>
+            <span class="badge badge-ship" style="font-size:10px">🌍 Ships to Japan ✓</span>
+          </div>
+          <div class="mock-checkout">
+            <div class="mc-line"><span>Subtotal</span><b>¥1,320</b></div>
+            <div class="mc-line"><span>Shipping</span><b>¥680</b></div>
+            <div class="mc-total"><span style="font-weight:800;color:var(--ink)">Total</span><span class="a">¥2,000</span></div>
+            <div style="font-size:11px;color:var(--trust-green);font-weight:700;margin-top:8px">✓ No hidden fees · 7–12 days</div>
+            <span class="mc-btn">Place order</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px;font-size:18px">💳 🅿️ 🍎 🟡</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ============ 9. 디자인 토큰 요약 ============ -->
+<section id="tokens">
+  <div class="wrap">
+    <span class="sec-kicker">09 · Design Tokens</span>
+    <h2 class="sec-title">디자인 토큰 요약</h2>
+    <p class="sec-desc">Tailwind CSS v4 <code class="tok">@theme</code> 로 그대로 이식할 값들입니다. (globals.css 의 <code class="tok">@theme inline</code> 블록에 매핑)</p>
+
+    <table>
+      <thead><tr><th style="width:22%">토큰</th><th style="width:18%">값 (HEX/px)</th><th>용도 · Tailwind 매핑 예시</th></tr></thead>
+      <tbody>
+        <tr><td colspan="3" style="background:var(--bg-lavender);font-family:var(--font-display);font-weight:700;color:var(--ink)">🎨 Colors</td></tr>
+        <tr><td><code class="tok">--color-bg-cream</code></td><td>#FFF8F1</td><td>기본 배경 · <code class="tok">bg-cream</code></td></tr>
+        <tr><td><code class="tok">--color-bg-lavender</code></td><td>#EFEBFB</td><td>섹션/카드 배경</td></tr>
+        <tr><td><code class="tok">--color-bg-mint / sky / peach</code></td><td>#E6F6EE / #E6F1FB / #FEEDE4</td><td>보조 파스텔 배경</td></tr>
+        <tr><td><code class="tok">--color-ink</code></td><td>#14161C</td><td>헤드라인·총액 · <code class="tok">text-ink</code></td></tr>
+        <tr><td><code class="tok">--color-ink-soft</code></td><td>#3A3F4A</td><td>본문</td></tr>
+        <tr><td><code class="tok">--color-concrete</code></td><td>#6B7280</td><td>보조 텍스트</td></tr>
+        <tr><td><code class="tok">--color-line</code></td><td>#EAE6E0</td><td>테두리·구분선 · <code class="tok">border-line</code></td></tr>
+        <tr><td><code class="tok">--color-pop-coral</code></td><td>#FF6B9D</td><td>밝은 배지 배경(진한 텍스트)</td></tr>
+        <tr><td><code class="tok">--color-pop-coral-deep</code></td><td>#D11E63</td><td>주요 버튼·총액 강조(흰 텍스트)</td></tr>
+        <tr><td><code class="tok">--color-pop-grape</code></td><td>#6C4CE0</td><td>보조 포인트·캐릭터/필터</td></tr>
+        <tr><td><code class="tok">--color-pop-sunny</code></td><td>#FFB020</td><td>한정/시즌 배지</td></tr>
+        <tr><td><code class="tok">--color-trust-green</code></td><td>#1F8A5B</td><td>배송 안심 체크</td></tr>
+        <tr><td colspan="3" style="background:var(--bg-lavender);font-family:var(--font-display);font-weight:700;color:var(--ink)">📐 Radius</td></tr>
+        <tr><td><code class="tok">--radius-sm / md / lg</code></td><td>10 / 16 / 24 px</td><td>칩·인풋 / 카드 / 히어로·큰 카드 · <code class="tok">rounded-md</code></td></tr>
+        <tr><td><code class="tok">--radius-pill</code></td><td>999px</td><td>버튼·배지·토글</td></tr>
+        <tr><td colspan="3" style="background:var(--bg-lavender);font-family:var(--font-display);font-weight:700;color:var(--ink)">📏 Spacing</td></tr>
+        <tr><td><code class="tok">--space-1 … 8</code></td><td>4 / 8 / 12 / 16 / 24 / 32 / 48 px</td><td>4px 기반 스케일 · Tailwind 기본과 정렬</td></tr>
+        <tr><td colspan="3" style="background:var(--bg-lavender);font-family:var(--font-display);font-weight:700;color:var(--ink)">🌥️ Shadow</td></tr>
+        <tr><td><code class="tok">--shadow-card</code></td><td>0 6px 18px rgba(20,22,28,.08)</td><td>기본 카드 · <code class="tok">shadow-card</code></td></tr>
+        <tr><td><code class="tok">--shadow-pop</code></td><td>0 10px 28px rgba(209,30,99,.18)</td><td>주요 버튼(코랄 그림자)</td></tr>
+        <tr><td><code class="tok">--shadow-float</code></td><td>0 14px 40px rgba(20,22,28,.14)</td><td>hover·플로팅(챗봇/모달)</td></tr>
+        <tr><td colspan="3" style="background:var(--bg-lavender);font-family:var(--font-display);font-weight:700;color:var(--ink)">🔤 Typography</td></tr>
+        <tr><td><code class="tok">--font-display</code></td><td>Baloo 2 / Nunito → system-ui</td><td>헤드라인·가격·라벨</td></tr>
+        <tr><td><code class="tok">--font-body</code></td><td>Nunito / Pretendard → system-ui</td><td>본문·UI. 스케일 40/26/16/13</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  성수 팝업 굿즈 · Design Moodboard v1.0 · Playful Pop · 2026-07-02<br>
+  귀여움(Playful) ↔ 신뢰(Trust) — 감성은 Playful, 돈·배송·결제는 고대비 Trust.
+</footer>
+
+</body>
+</html>

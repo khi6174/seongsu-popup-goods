@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Write-Output \"node: $\\(node --version 2>$null\\)\"; Write-Output \"npm: $\\(npm --version 2>$null\\)\"; Write-Output \"npx: $\\(npx --version 2>$null\\)\"; Write-Output \"--- project dir ---\"; Get-ChildItem -Force \"C:\\\\Users\\\\김용우\\\\claude\\\\sk_ai\" | Select-Object Name)",
+      "PowerShell(New-Item *)",
+      "PowerShell($tmp = \"C:\\\\Users\\\\김용우\\\\sk_scaffold\"; npx --yes create-next-app@latest $tmp --ts --tailwind --app --src-dir --eslint --use-npm --import-alias \"@/*\" --skip-install --turbopack --yes)",
+      "PowerShell(Remove-Item *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\김용우\\\\claude\\\\sk_ai\"; Select-String -Path \"node_modules\\\\@prisma\\\\adapter-better-sqlite3\\\\dist\\\\index.d.ts\" -Pattern \"constructor\" -Context 0,3 | ForEach-Object { $_.Line; $_.Context.PostContext })",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\김용우\\\\claude\\\\sk_ai\"; Select-String -Path \"node_modules\\\\@prisma\\\\adapter-better-sqlite3\\\\dist\\\\index.d.ts\" -Pattern \"BetterSQLite3InputParams|type BetterSQLite3|url|filename\" | ForEach-Object { $_.Line })",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\김용우\\\\claude\\\\sk_ai\"; $env:PORT=3000; Start-Process -FilePath \"npm\" -ArgumentList \"run\",\"start\" -WindowStyle Hidden -RedirectStandardOutput \"$env:TEMP\\\\srv.out\" -RedirectStandardError \"$env:TEMP\\\\srv.err\"; Write-Output \"server starting...\")",
+      "Bash(PORT=3000 npm run start)",
+      "PowerShell($ok=$false; for\\($i=0;$i -lt 20;$i++\\){ try { $r=Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 5; if\\($r.StatusCode -eq 200\\){ Write-Output \"HOME OK \\($\\($r.StatusCode\\)\\), length=$\\($r.Content.Length\\)\"; $ok=$true; break } } catch { Start-Sleep -Milliseconds 1500 } }; if\\(-not $ok\\){ Write-Output \"NOT UP YET\"; Get-Content \"$env:TEMP\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\..\\\\Temp\\\\claude\\\\C--Users-----claude-sk-ai\\\\ec648aa6-dff4-4a7b-960b-96dea8b90eb5\\\\tasks\\\\bcy86b9hu.output\" -ErrorAction SilentlyContinue | Select-Object -Last 20 })",
+      "PowerShell($conns = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue; if\\($conns\\){ $conns.OwningProcess | Select-Object -Unique | ForEach-Object { try { Stop-Process -Id $_ -Force; Write-Output \"stopped PID $_\" } catch {} } } else { Write-Output \"no listener on 3000\" })",
+      "Bash(PORT=3000 npm run dev)",
+      "PowerShell($ok=$false; for\\($i=0;$i -lt 30;$i++\\){ try { $r=Invoke-WebRequest -Uri \"http://localhost:3000/\" -UseBasicParsing -TimeoutSec 5; if\\($r.StatusCode -eq 200\\){ Write-Output \"서버 정상 \\(200\\), 페이지 길이=$\\($r.Content.Length\\)\"; $ok=$true; break } } catch { Start-Sleep -Milliseconds 2000 } }; if\\(-not $ok\\){ Write-Output \"아직 안 뜸 — 로그 확인:\"; Get-Content \"C:\\\\Users\\\\김용우\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-----claude-sk-ai\\\\ec648aa6-dff4-4a7b-960b-96dea8b90eb5\\\\tasks\\\\bd1jf030p.output\" -ErrorAction SilentlyContinue | Select-Object -Last 15 })",
+      "WebSearch",
+      "PowerShell($f = \"C:\\\\Users\\\\김용우\\\\claude\\\\sk_ai\\\\docs\\\\design\\\\moodboard.html\"; if \\(Test-Path $f\\) { $size = [math]::Round\\(\\(Get-Item $f\\).Length/1KB,1\\); Write-Output \"OK: $f \\($size KB\\)\"; Start-Process $f; Write-Output \"브라우저에서 열었습니다.\" } else { Write-Output \"파일을 찾을 수 없습니다: $f\" })",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "PowerShell(winget search *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(grep -E \"\\(^|/\\)\\\\.env$|\\\\.db$|\\\\.db-journal$\")",
+      "Bash(git config *)",
+      "Bash(echo \"name=$\\(git config user.name\\)  email=$\\(git config user.email\\)\")"
+    ]
+  }
+}

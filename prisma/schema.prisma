@@ -1,0 +1,79 @@
+// 성수동 팝업 굿즈 글로벌 쇼핑몰 — 데이터 스키마
+// 설계 근거: docs/planning/03-data-model.md
+// 참고: SQLite에는 enum/배열 타입이 없어 category·status는 String,
+//       이미지 목록(imageUrls)은 JSON 문자열로 저장한다.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// 성수동에서 열리는 팝업 하나. (status는 저장하지 않고 날짜로 계산 — 03 설계 원칙)
+model Popup {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  nameKo        String
+  nameEn        String
+  descriptionKo String
+  descriptionEn String
+  brand         String
+  thumbnailUrl  String
+  startDate     DateTime
+  endDate       DateTime
+  location      String?
+  products      Product[]
+  createdAt     DateTime  @default(now())
+}
+
+/// 특정 팝업에 소속된 판매 굿즈.
+model Product {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  popupId       String
+  popup         Popup       @relation(fields: [popupId], references: [id], onDelete: Cascade)
+  nameKo        String
+  nameEn        String
+  descriptionKo String // 원문(한글)
+  descriptionEn String? // AI 자동 번역 결과(영어) — 없을 수 있음
+  category      String // KEYRING | STICKER | ECOBAG | PHOTOCARD | STAND | ETC
+  priceKrw      Int // 원 단위 정수
+  imageUrls     String // JSON 배열 문자열 (예: "[\"/img/a.png\"]")
+  stock         Int         @default(0)
+  isActive      Boolean     @default(true)
+  orderItems    OrderItem[]
+  createdAt     DateTime    @default(now())
+}
+
+/// 주문(비회원 + 모의결제). 완료 시 생성.
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique // 사람이 읽는 번호 예: SS-20260702-0001
+  ordererName    String
+  ordererEmail   String
+  shippingCountry String
+  shippingAddress String
+  shippingRegion String // KR | ASIA | OTHER — 배송비 결정
+  subtotalKrw    Int
+  shippingFeeKrw Int
+  totalKrw       Int
+  status         String      @default("CREATED") // MVP: CREATED(모의결제 완료)
+  items          OrderItem[]
+  createdAt      DateTime    @default(now())
+}
+
+/// 주문 상세 — 주문 당시의 상품명·가격을 스냅샷으로 박제(03 설계 원칙).
+model OrderItem {
+  id                  String  @id @default(cuid())
+  orderId             String
+  order               Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId           String
+  product             Product @relation(fields: [productId], references: [id])
+  productNameSnapshot String
+  priceKrwSnapshot    Int
+  quantity            Int
+}
